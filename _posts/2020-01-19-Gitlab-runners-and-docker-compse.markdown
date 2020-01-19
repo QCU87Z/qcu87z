@@ -6,21 +6,21 @@ categories: gitlab docker
 ---
 
 {% highlight ini %}
-  [req]
-  prompt             = no
-  default_bits       = 2048
-  x509_extensions    = v3_req
-  distinguished_name = req_distinguished_name
+[req]
+prompt             = no
+default_bits       = 2048
+x509_extensions    = v3_req
+distinguished_name = req_distinguished_name
 
-  [req_distinguished_name]
-  organizationName        = qcu87z
-  commonName              = 192.168.1.25
+[req_distinguished_name]
+organizationName        = qcu87z
+commonName              = 192.168.1.25
 
-  [v3_req]
-  subjectAltName = @alt_names
+[v3_req]
+subjectAltName = @alt_names
 
-  [alt_names]
-  IP.1 = 192.168.1.25
+[alt_names]
+IP.1 = 192.168.1.25
 
 {% endhighlight %}
 
@@ -34,39 +34,38 @@ Regenerate certs
 ### Docker compose file
 
 {% highlight yaml %}
-  version: '3.5'
-  services:
-    web:
-      image: 'gitlab/gitlab-ce:latest'
-      restart: always
-      hostname: '192.168.1.25'
-      environment:
-        GITLAB_OMNIBUS_CONFIG: |
-          external_url 'https://192.168.1.25'
-          # Add any other gitlab.rb configuration here, each on its own line
-      ports:
-        - '80:80'
-        - '443:443'
-        - '22:22'
-      volumes:
-        - '/srv/gitlab/config:/etc/gitlab'
-        - '/srv/gitlab/logs:/var/log/gitlab'
-        - '/srv/gitlab/data:/var/opt/gitlab'
-      networks:
-        - gitlab
+version: '3.5'
+services:
+  web:
+    image: 'gitlab/gitlab-ce:latest'
+    restart: always
+    hostname: '192.168.1.25'
+    environment:
+      GITLAB_OMNIBUS_CONFIG: |
+        external_url 'https://192.168.1.25'
+        # Add any other gitlab.rb configuration here, each on its own line
+    ports:
+      - '80:80'
+      - '443:443'
+      - '22:22'
+    volumes:
+      - '/srv/gitlab/config:/etc/gitlab'
+      - '/srv/gitlab/logs:/var/log/gitlab'
+      - '/srv/gitlab/data:/var/opt/gitlab'
+    networks:
+      - gitlab
 
-    runner:
-      image: gitlab/gitlab-runner:alpine
-      restart: unless-stopped
-      depends_on:
-        - web
-      volumes:
-        - '/srv/gitlab-runner:/etc/gitlab-runner'
-        - '/var/run/docker.sock:/var/run/docker.sock'
-      networks:
-        - gitlab
+  runner:
+    image: gitlab/gitlab-runner:alpine
+    restart: unless-stopped
+    depends_on:
+      - web
+    volumes:
+      - '/srv/gitlab-runner:/etc/gitlab-runner'
+      - '/var/run/docker.sock:/var/run/docker.sock'
+    networks:
+      - gitlab
 
-  networks:
-    gitlab:
-
+networks:
+  gitlab:
 {% endhighlight %}

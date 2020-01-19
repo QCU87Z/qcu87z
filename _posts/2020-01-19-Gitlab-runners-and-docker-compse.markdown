@@ -5,7 +5,7 @@ date:   2020-01-19 20:50:26 +1100
 categories: gitlab docker
 ---
 
-{%- highlight ini -%}
+{% highlight ini %}
   [req]
   prompt             = no
   default_bits       = 2048
@@ -22,7 +22,7 @@ categories: gitlab docker
   [alt_names]
   IP.1 = 192.168.1.25
 
-{%- endhighlight -%}
+{% endhighlight %}
 
 
 Regenerate certs
@@ -33,7 +33,7 @@ Regenerate certs
 
 ### Docker compose file
 
-{%- highlight yaml -%}
+{% highlight yaml %}
   version: '3.5'
   services:
     web:
@@ -69,4 +69,4 @@ Regenerate certs
   networks:
     gitlab:
 
-{%- endhighlight -%}
+{% endhighlight %}

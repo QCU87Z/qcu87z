@@ -4,26 +4,69 @@ title:  "Gitlab runners and docker-compose"
 date:   2020-01-19 20:50:26 +1100
 categories: gitlab docker
 ---
-You’ll find this post in your `_posts` directory. Go ahead and edit it and re-build the site to see your changes. You can rebuild the site in many different ways, but the most common way is to run `jekyll serve`, which launches a web server and auto-regenerates your site when a file is updated.
 
-Jekyll requires blog post files to be named according to the following format:
+{%- highlight ini -%}
+  [req]
+  prompt             = no
+  default_bits       = 2048
+  x509_extensions    = v3_req
+  distinguished_name = req_distinguished_name
 
-`YEAR-MONTH-DAY-title.MARKUP`
+  [req_distinguished_name]
+  organizationName        = qcu87z
+  commonName              = 192.168.1.25
 
-Where `YEAR` is a four-digit number, `MONTH` and `DAY` are both two-digit numbers, and `MARKUP` is the file extension representing the format used in the file. After that, include the necessary front matter. Take a look at the source for this post to get an idea about how it works.
+  [v3_req]
+  subjectAltName = @alt_names
 
-Jekyll also offers powerful support for code snippets:
+  [alt_names]
+  IP.1 = 192.168.1.25
 
-{% highlight ruby %}
-def print_hi(name)
-  puts "Hi, #{name}"
-end
-print_hi('Tom')
-#=> prints 'Hi, Tom' to STDOUT.
+{%- endhighlight -%}
+
+
+Regenerate certs
+
+{% highlight shell %}
+  openssl req -x509 -days 1000 -nodes -out 192.168.1.25.crt -keyout 192.168.1.25.key -config ssl.cnf -extensions v3_req
 {% endhighlight %}
 
-Check out the [Jekyll docs][jekyll-docs] for more info on how to get the most out of Jekyll. File all bugs/feature requests at [Jekyll’s GitHub repo][jekyll-gh]. If you have questions, you can ask them on [Jekyll Talk][jekyll-talk].
+### Docker compose file
 
-[jekyll-docs]: https://jekyllrb.com/docs/home
-[jekyll-gh]:   https://github.com/jekyll/jekyll
-[jekyll-talk]: https://talk.jekyllrb.com/
+{%- highlight yaml -%}
+  version: '3.5'
+  services:
+    web:
+      image: 'gitlab/gitlab-ce:latest'
+      restart: always
+      hostname: '192.168.1.25'
+      environment:
+        GITLAB_OMNIBUS_CONFIG: |
+          external_url 'https://192.168.1.25'
+          # Add any other gitlab.rb configuration here, each on its own line
+      ports:
+        - '80:80'
+        - '443:443'
+        - '22:22'
+      volumes:
+        - '/srv/gitlab/config:/etc/gitlab'
+        - '/srv/gitlab/logs:/var/log/gitlab'
+        - '/srv/gitlab/data:/var/opt/gitlab'
+      networks:
+        - gitlab
+
+    runner:
+      image: gitlab/gitlab-runner:alpine
+      restart: unless-stopped
+      depends_on:
+        - web
+      volumes:
+        - '/srv/gitlab-runner:/etc/gitlab-runner'
+        - '/var/run/docker.sock:/var/run/docker.sock'
+      networks:
+        - gitlab
+
+  networks:
+    gitlab:
+
+{%- endhighlight -%}
